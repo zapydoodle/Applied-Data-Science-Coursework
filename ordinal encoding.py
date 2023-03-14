@@ -30,5 +30,5 @@ feature=feature.replace(map)
 print(feature)#Prints new features after map is applied
 
 df[featureName]=feature
-df.to_csv(filename+"Modified.csv",index=False,encoding='utf-8')
+df.to_csv(filename+"Modified.csv",index=False,encoding='utf-8',na_rep='NA')
 #maps-synthetic-data-v1.1
