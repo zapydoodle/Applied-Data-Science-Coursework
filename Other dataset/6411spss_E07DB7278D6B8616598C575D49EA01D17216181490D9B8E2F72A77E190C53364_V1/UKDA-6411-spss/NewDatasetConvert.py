@@ -5,16 +5,19 @@ features="MCSID,DCMCS4AGE,DCCSEX00,DCSC0001,DCSC0002,DCSC0003,DCSC0004,DCSC0005,
 featuresList=features.split(",")
 featuresRenamed="Id,Age,Sex,LikeMusic,LikeTV,LikeDrawing,LikeComputer,LikeOutSport,LikeInSport,FriendCount,LikeFriendPlay,LikeAlone,FunFamily,LikeSchool,SadSchool,TiredSchool,FedSchool,FriendTalk,Bullied,BullyOthers,ChildLeftOut,EverHomeless,CurrHomeless,MumCont,MumSee,MumSpeak,DadCont,DadSee,DadSpeak,agg_score,AgeDepDiag,DeprsTreatCurr,DeprsTreat,FirstCigAge,FirstAlchAge,FirstAlchDrinkAge,AlchDrinkYr,AlchDrinkMon,AlchDrinkExcs,AlchDrinkExcsAge,AlchDrinkExcsNum,CannabisY/N,CocaineY/N,AcidY/N,EcstasyY/N,SpeedY/N,SemeronY/N,KetamineY/N,MephedroneY/N,PsychoactiveY/N,SpeedY/N,FriendSpend,GamesSpend,SocialmedSpend,SocialmedAddict"
 featuresRenamedList=featuresRenamed.split(",")
-featuresMap=dict(zip(featuresRenamedList,featuresList))
+featuresMap=dict(zip(featuresList,featuresRenamedList))
 
-df = pd.read_spss('mcs4_cm_interview - test.sav')
+df = pd.read_spss('mcs7_cm_interview - test.sav')
 
 cols=[]
 for feature in df.columns:
     cols.append(feature)
 print(cols)
 df.drop(df.columns.difference(featuresList),1,inplace=True)
-
-
-filename="testDataset"
+df.rename(columns=featuresMap,inplace=True)
+cols=[]
+for feature in df.columns:
+    cols.append(feature)
+print(cols)
+filename="DateAge7"
 df.to_csv(filename)
