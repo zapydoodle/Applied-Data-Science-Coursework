@@ -7,7 +7,7 @@ featuresRenamed="Id,Age,Sex,LikeMusic,LikeTV,LikeDrawing,LikeComputer,LikeOutSpo
 featuresRenamedList=featuresRenamed.split(",")
 featuresMap=dict(zip(featuresList,featuresRenamedList))
 
-df = pd.read_spss('mcs7_cm_interview - test.sav')
+df = pd.read_spss('mcs4_cm_interview - test.sav')
 
 cols=[]
 for feature in df.columns:
@@ -19,5 +19,5 @@ cols=[]
 for feature in df.columns:
     cols.append(feature)
 print(cols)
-filename="DateAge7"
+filename="DateAge4.csv"
 df.to_csv(filename)
