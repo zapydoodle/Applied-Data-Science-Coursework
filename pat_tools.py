@@ -11,6 +11,19 @@ import matplotlib.pyplot as plt
 
 pd.options.mode.chained_assignment = None  # default='warn'
 
+class Dataset:
+
+    def __init__(self, data, study):
+        self.data = data
+        self.study = study
+        self.features = None
+        self.labels = None
+        self.sfeatures = None
+        self.nsfeatures = None
+        self.sconmat = None
+        self.nsconmat = None
+
+
 def feat_and_lab(data_csv_filename):
     """
     Extract the features and labels from the dataframe
@@ -48,6 +61,32 @@ def pick_label(dataframe, label_name):
     # Take has_dep_diag column
     label = dataframe[label_name]
     return label
+
+"""""""""""""""""""""
+-SCREEN TIME SPLIT-
+"""""""""""""""""""""
+
+def screen_time_split(features, dataset):
+    """
+    Take in features dataframe and split into two
+    one for screen-time features and one for non screen-time features
+    """
+    # List of screen time features (ALSPAC)
+    alspac_screen = ["tv_bed_9","comp_games_bed","computer","phone","talk_mob","talk_phone","text","tv","fam_tv"]
+    # List of non screen time features (ALSPAC)
+    alspac_noscreen = ["mat_dep","mat_age","iq","pat_pres_10","pat_pres_8","pat_pres","agg_score","exercise","child_bull","musi_13","creat_14","alone","draw","abuse","music","outside_sum","outside_win","play","read","work","mother_anxiety"]
+    # List of screen time features (MCS)
+    mcs_screen = []
+    # List of non screen time features (MCS)
+    mcs_noscreen = []
+    # Make dictionary from the lists
+    label_dict = {"ALSPAC" : (alspac_screen, alspac_noscreen),
+                  "MCS" : (mcs_screen, mcs_noscreen)}
+    
+    screentime_features = features.drop(label_dict[dataset][1], axis=1)
+    noscreentime_features = features.drop(label_dict[dataset][0], axis=1)
+
+    return screentime_features, noscreentime_features
 
 """""""""""""""""""""""""""
 -CHI-SQUARED INDEPENDENCE-
@@ -150,15 +189,12 @@ def make_conmat(y_pred, y_test, normalised=True):
 
     return conmat
 
-def plot_conmat(conmat):
-    # Plot confusion matrix
-    fig, ax = plt.subplots(figsize=(3,3), dpi=100)
-
-    im = ax.imshow(conmat.T, cmap="cool")
+def plot_conmat(conmat, ax):
+    ax.imshow(conmat.T, cmap="cool")
 
     # Show all ticks and label them with the respective list entries
-    ax.set_xticks(np.arange(2), labels=["No depression", "Depression"])
-    ax.set_yticks(np.arange(2), labels=["No depression", "Depression"])
+    ax.set_xticks(np.arange(2), labels=["No Dep", "Dep"])
+    ax.set_yticks(np.arange(2), labels=["No Dep", "Dep"])
 
     ax.set(ylabel="Predicted", xlabel="Actual")
 
@@ -169,7 +205,7 @@ def plot_conmat(conmat):
                 (1,1) : "TP"}
     for i in range(2):
         for j in range(2):
-            text = ax.text(j, i, str(round(conmat.T[j, i],2))+f" ({meanings[(i,j)]})",
-                        ha="center", va="center", color="k")
-
-    plt.show()
+            ax.text(j, i, str(round(conmat.T[j, i],2))+f" ({meanings[(i,j)]})",
+                    ha="center", va="center", color="k")
+            
+    return ax
