@@ -20,6 +20,7 @@ age17.drop(age17.columns.difference(featuresList),1,inplace=True)
 age17.rename(columns=featuresMap,inplace=True)
 
 df=pd.merge(age7,age17,on="Id")
+df.drop(columns=['CannabisY/N', 'CocaineY/N'],inplace=True)
 cols=[]
 for feature in df.columns:
     cols.append(feature)
