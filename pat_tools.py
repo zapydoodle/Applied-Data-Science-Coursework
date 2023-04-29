@@ -3,7 +3,6 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.impute import SimpleImputer
 from sklearn import metrics 
-from sklearn.ensemble import RandomForestClassifier
 from scipy.stats import chi2_contingency, chi2
 import pandas as pd
 import numpy as np
@@ -11,25 +10,39 @@ import matplotlib.pyplot as plt
 
 pd.options.mode.chained_assignment = None  # default='warn'
 
-class Dataset:
+class FeatureGroup:
 
-    def __init__(self, data, study):
+    def __init__(self, data, study, description):
         self.data = data
         self.study = study
+        self.description = description
         self.features = None
-        self.labels = None
-        self.sfeatures = None
-        self.nsfeatures = None
-        self.sconmat = None
-        self.nsconmat = None
+        self.label = None
+        self.conmat = None
+        self.tree = None
 
 
-def feat_and_lab(data_csv_filename):
+def feat_and_lab(data_csv_filename, balance=False):
     """
     Extract the features and labels from the dataframe
     """
     # Get dataframe
     data = pd.read_csv(data_csv_filename)
+
+    # Balance data to have the same number of people who are depressed or not
+    if balance:
+        # Count the number of depressed and non depressed people
+        dep_counts = data['has_dep_diag'].value_counts()
+        not_dep_count = int(dep_counts[0])
+        dep_count = int(dep_counts[1])
+        not_dep_removal_num = not_dep_count-dep_count
+        # Get all not depressed people 
+        no_dep_people = data.loc[data["has_dep_diag"] == 0]
+        # Choose some indexes at random to remove
+        np.random.seed(10)
+        drop_indices = np.random.choice(no_dep_people.index, not_dep_removal_num, replace=False)
+        # Remove those indexes from the dataframe
+        data.drop(drop_indices, inplace=True)
 
     # Extract features
     features_df = extract_features(data)
@@ -40,7 +53,10 @@ def feat_and_lab(data_csv_filename):
     # Extract labels
     labels = extract_labels(data)
 
-    return features_df, labels
+    # Pick out has_dep_diag
+    label = pick_label(labels, 'has_dep_diag')
+
+    return features_df, label
 
 def impute_features(features_df, imp_strategy='most_frequent'):
     """
@@ -126,21 +142,13 @@ def independence_test(features, labels, chosen_label):
 --MACHINE LEARNING--
 """""""""""""""""""""
 
-def decision_tree(features, labels, chosen_label, depth=3):
-    # Take has_dep_diag column
-    has_dep = pick_label(labels, chosen_label)
+def decision_tree(features, label, depth=3):
 
     # Train test split
-    X_train, X_test, y_train, y_test = train_test_split(features, has_dep, test_size=0.3, random_state=1, stratify=has_dep) # 70% training and 30% test
-
-    # Assign weights for class imbalance
-    no_dep_num = len(y_train[y_train==0])
-    dep_num = len(y_train[y_train==1])
-    total = len(y_train)
-    weights = {0:dep_num/total, 1:no_dep_num/total}
+    X_train, X_test, y_train, y_test = train_test_split(features, label, test_size=0.3, random_state=1, stratify=label) # 70% training and 30% test
 
     # Create Decision Tree classifer object
-    clf = DecisionTreeClassifier(criterion='entropy', class_weight=weights, max_depth=depth)
+    clf = DecisionTreeClassifier(criterion='gini', class_weight='balanced', max_depth=depth, splitter='random')
 
     # Train Decision Tree Classifer
     clf = clf.fit(X_train,y_train)
@@ -149,32 +157,6 @@ def decision_tree(features, labels, chosen_label, depth=3):
     y_pred = clf.predict(X_test)
 
     return y_pred, y_test, clf
-   
-
-def random_forest(features, labels, chosen_label):
-    # Take has_dep_diag column
-    has_dep = pick_label(labels, chosen_label)
-
-    # Train test split
-    X_train, X_test, y_train, y_test = train_test_split(features, has_dep, test_size=0.3, random_state=1, stratify=has_dep) # 70% training and 30% test
-
-    # Assign weights for class imbalance
-    no_dep_num = len(y_train[y_train==0])
-    dep_num = len(y_train[y_train==1])
-    total = len(y_train)
-    weights = {0:dep_num/total, 1:no_dep_num/total}
-
-    # Create Random Forest Classifier object
-    clf = RandomForestClassifier(max_depth=3, criterion='entropy', class_weight=weights)
-
-    # Random Forest Classifier
-    clf = clf.fit(X_train,y_train)
-
-    # Predict the response for test dataset
-    y_pred = clf.predict(X_test)
-
-    return y_pred, y_test
-
 
 def make_conmat(y_pred, y_test, normalised=True):
     """
