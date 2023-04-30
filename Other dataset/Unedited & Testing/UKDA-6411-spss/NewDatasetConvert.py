@@ -16,17 +16,22 @@ age17parent=pd.read_spss('mcs7_parent_interview.sav')
 age7child.drop(age7child.columns.difference(featuresList),1,inplace=True)
 age7child.rename(columns=featuresMap,inplace=True)
 
+
 age17child.drop(age17child.columns.difference(featuresList),1,inplace=True)
 age17child.rename(columns=featuresMap,inplace=True)
+
 
 age7teach.drop(age7teach.columns.difference(featuresList),1,inplace=True)
 age7teach.rename(columns=featuresMap,inplace=True)
 
+
 age7parent.drop(age7parent.columns.difference(featuresList),1,inplace=True)
 age7parent.rename(columns=featuresMap,inplace=True)
 
+
 age17parent.drop(age17parent.columns.difference(featuresList),1,inplace=True)
 age17parent.rename(columns=featuresMap,inplace=True)
+
 
 df1=pd.merge(age7child,age17child,on="Id")
 df1.drop(columns=['CannabisY/N17', 'CocaineY/N17'],inplace=True)
@@ -43,4 +48,5 @@ for feature in df.columns:
     cols.append(feature)
 print(cols)
 filename="MergedDatasets.csv"
+#df.drop_duplicates(subset="Id",keep=False, inplace=True)
 df.to_csv(filename)
