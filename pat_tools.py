@@ -62,20 +62,22 @@ def feat_and_lab_mcs(data_csv_filename, balance=False):
     data = pd.read_csv(data_csv_filename)
 
     data = data[data.DadCont17 != 'No – he has died']
+    data = data[data.MumCont17 != 'No – she has died']
+    data = data[np.isnan(data.DocDep17)  == False]
 
     # Convert age of depression diagnosis to 1 or 0
-    data.loc[np.isnan(data['AgeDepDiag17']), 'AgeDepDiag17'] = 0
-    data.loc[data['AgeDepDiag17'] != 0, 'AgeDepDiag17'] = 1
+    data.loc[data['DocDep17'] == 1, 'DocDep17'] = 0
+    data.loc[data['DocDep17'] == 2, 'DocDep17'] = 1
 
     # Balance data to have the same number of people who are depressed or not
     if balance:
         # Count the number of depressed and non depressed people
-        dep_counts = data['AgeDepDiag17'].value_counts()
+        dep_counts = data['DocDep17'].value_counts()
         not_dep_count = int(dep_counts[0])
         dep_count = int(dep_counts[1])
         not_dep_removal_num = not_dep_count-dep_count
         # Get all not depressed people 
-        no_dep_people = data.loc[data['AgeDepDiag17'] == 0]
+        no_dep_people = data.loc[data['DocDep17'] == 0]
         # Choose some indexes at random to remove
         drop_indices = np.random.choice(no_dep_people.index, not_dep_removal_num, replace=False)
         # Remove those indexes from the dataframe
@@ -83,19 +85,21 @@ def feat_and_lab_mcs(data_csv_filename, balance=False):
 
     # Define the label columns to drop (quicker than specifying the features to keep)
     labels = [
+        'Unnamed: 0',
         'Id',
         'Age',
         'AgeDepDiag17',
         'DeprsTreatCurr17',
         'DeprsTreat17',
         'DepressionTeach7',
-        'UpsetTeach7'
+        'UpsetTeach7',
+        'DocDep17'
     ]
 
     # Remove the labels from the data frame
     features = data.drop(labels, axis=1)
 
-    label = pick_label(data, 'AgeDepDiag17')
+    label = pick_label(data, 'DocDep17')
 
     return features, label
 
@@ -135,7 +139,7 @@ def screen_time_split(features, dataset):
     # List of screen time features (MCS)
     mcs_screen = ['LikeTV7','LikeComputer7','GamesSpend17','SocialmedSpend17','SocialmedAddict17']
     # List of non screen time features (MCS)
-    mcs_noscreen = ['Sex','LikeMusic7','LikeDrawing7','LikeOutSport7','LikeInSport7','FriendCount7','LikeFriendPlay7','LikeAlone7','FunFamily7','LikeSchool7','SadSchool7','TiredSchool7','FedSchool7','FriendTalk7','Bullied7','BullyOthers7','ChildLeftOut7','EverHomeless17','CurrHomeless17','MumCont17','MumSee17','MumSpeak17','DadCont17','DadSee17','DadSpeak17','agg_score17','FirstCigAge17','FirstAlchAge17','FirstAlchDrinkAge17','AlchDrinkYr17','AlchDrinkMon17','AlchDrinkExcs17','AlchDrinkExcsAge17','AlchDrinkExcsNum17','AcidY/N17','EcstasyY/N17','SpeedY/N17','SemeronY/N17','KetamineY/N17','MephedroneY/N17','PsychoactiveY/N17','SpeedY/N17.1','FriendSpend17','ParentsDiv7','Parentsdiv17','FightChildTeach7','ChildBullyTeach7']
+    mcs_noscreen = ['Sex','LikeMusic7','LikeDrawing7','LikeOutSport7','LikeInSport7','FriendCount7','LikeFriendPlay7','LikeAlone7','FunFamily7','LikeSchool7','SadSchool7','TiredSchool7','FedSchool7','FriendTalk7','Bullied7','BullyOthers7','ChildLeftOut7','EverHomeless17','CurrHomeless17','MumCont17','MumSee17','MumSpeak17','DadCont17','DadSee17','DadSpeak17','FirstCigAge17','FirstAlchAge17','FirstAlchDrinkAge17','AlchDrinkYr17','AlchDrinkMon17','AlchDrinkExcs17','AlchDrinkExcsAge17','AlchDrinkExcsNum17','AcidY/N17','EcstasyY/N17','SpeedY/N17','SemeronY/N17','KetamineY/N17','MephedroneY/N17','PsychoactiveY/N17','SpeedY/N17.1','FriendSpend17','ParentsDiv7','Parentsdiv17','FightChildTeach7','ChildBullyTeach7']
     # Make dictionary from the lists
     label_dict = {"ALSPAC" : (alspac_screen, alspac_noscreen),
                   "MCS" : (mcs_screen, mcs_noscreen)}
